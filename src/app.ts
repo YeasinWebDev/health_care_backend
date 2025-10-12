@@ -4,6 +4,7 @@ import notFound from "./middlewares/notFound";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import { userRouters } from "./modules/user/user.routes";
 import { authRoutes } from "./modules/auth/auth.routes";
+import cookieParser from "cookie-parser";
 
 const app: Application = express();
 
@@ -15,6 +16,7 @@ app.use(
 );
 
 // parser
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

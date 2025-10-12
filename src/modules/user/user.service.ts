@@ -1,8 +1,9 @@
-import { Admin, Doctor, UserRole } from "@prisma/client";
+import { User, UserRole, UserStatus } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { uploadToCloudinary } from "../../helper/fileUploder";
 import { createPatientInput } from "./user.interface";
 import bcrypt from "bcryptjs";
+import { findManyWithFilters } from "../../helper/prismaHelper";
 
 const createPatient = async (payload: createPatientInput, file: Express.Multer.File | undefined) => {
   if (file) {
@@ -48,9 +49,8 @@ const createPatient = async (payload: createPatientInput, file: Express.Multer.F
   return result;
 };
 
-const createAdmin = async (body:any,file: Express.Multer.File | undefined)=> {
-
-  if(!body){
+const createAdmin = async (body: any, file: Express.Multer.File | undefined) => {
+  if (!body) {
     throw new Error("Admin data is required");
   }
 
@@ -67,12 +67,12 @@ const createAdmin = async (body:any,file: Express.Multer.File | undefined)=> {
     role: UserRole.ADMIN,
   };
 
-  const adminData ={
+  const adminData = {
     name: body.name,
     email: body.email,
     profilePhoto: body.profilePhoto,
-    contactNumber: body.contactNumber
-  }
+    contactNumber: body.contactNumber,
+  };
 
   const result = await prisma.$transaction(async (transactionClient) => {
     await transactionClient.user.create({
@@ -89,9 +89,8 @@ const createAdmin = async (body:any,file: Express.Multer.File | undefined)=> {
   return result;
 };
 
-const createDoctor = async (body:any,file: Express.Multer.File | undefined) => {
-
-  if(!body){
+const createDoctor = async (body: any, file: Express.Multer.File | undefined) => {
+  if (!body) {
     throw new Error("Doctor data is required");
   }
 
@@ -107,7 +106,7 @@ const createDoctor = async (body:any,file: Express.Multer.File | undefined) => {
     role: UserRole.DOCTOR,
   };
 
-  const doctorData ={
+  const doctorData = {
     name: body.name,
     email: body.email,
     profilePhoto: body.profilePhoto,
@@ -120,7 +119,7 @@ const createDoctor = async (body:any,file: Express.Multer.File | undefined) => {
     qualification: body.qualification,
     currentWorkPlace: body.currentWorkPlace,
     designation: body.designation,
-  }
+  };
 
   const result = await prisma.$transaction(async (transactionClient) => {
     await transactionClient.user.create({
@@ -137,8 +136,26 @@ const createDoctor = async (body:any,file: Express.Multer.File | undefined) => {
   return result;
 };
 
+const getallFromDB = async (page: number, limit: number, search: string, sortBy?: keyof User, sortOrder?: "asc" | "desc", role?: UserRole, status?: UserStatus) => {
+  const result = await findManyWithFilters(prisma.user, {
+    page,
+    limit,
+    search,
+    searchField: "email",
+    sortBy,
+    sortOrder,
+    filters: {
+      ...(role ? { role } : {}),
+      ...(status ? { status } : {}),
+    },
+  });
+
+  return result;
+};
+
 export const UserService = {
   createPatient,
   createAdmin,
   createDoctor,
+  getallFromDB,
 };
