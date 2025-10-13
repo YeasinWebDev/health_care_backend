@@ -5,6 +5,8 @@ import globalErrorHandler from "./middlewares/globalErrorHandler";
 import { userRouters } from "./modules/user/user.routes";
 import { authRoutes } from "./modules/auth/auth.routes";
 import cookieParser from "cookie-parser";
+import { scheduleRoutes } from "./modules/schedule/schedule.routes";
+import { doctorScheduleRoutes } from "./modules/doctorSchedule/doctorSchedule.routes";
 
 const app: Application = express();
 
@@ -24,6 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/user", userRouters);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/schedule", scheduleRoutes);
+app.use("/api/v1/doctor-schedule", doctorScheduleRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send({

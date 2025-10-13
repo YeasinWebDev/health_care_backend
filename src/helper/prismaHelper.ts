@@ -1,4 +1,3 @@
-import { PrismaClient, Prisma } from "@prisma/client";
 
 export interface FindManyOptions<T> {
   page?: number;
@@ -7,7 +6,7 @@ export interface FindManyOptions<T> {
   searchField?: keyof T;
   sortBy?: keyof T;
   sortOrder?: "asc" | "desc";
-  filters?: Partial<T>;
+  filters?: any;
 }
 
 export interface PaginatedResult<T> {
@@ -20,45 +19,25 @@ export interface PaginatedResult<T> {
   data: T[];
 }
 
-export async function findManyWithFilters<T extends {}>(
+export async function findManyWithFilters<T, FindManyArgs extends { where?: any; skip?: number; take?: number; orderBy?: any }, CountArgs extends { where?: any }>(
   model: {
-    findMany: (args: Prisma.UserFindManyArgs) => Promise<T[]>;
-    count: (args: Prisma.UserCountArgs) => Promise<number>;
+    findMany: (args: FindManyArgs) => Promise<T[]>;
+    count: (args: CountArgs) => Promise<number>;
   },
   options: FindManyOptions<T>
 ): Promise<PaginatedResult<T>> {
-  const {
-    page = 1,
-    limit = 10,
-    search,
-    searchField,
-    sortBy,
-    sortOrder,
-    filters = {},
-  } = options;
+  const { page = 1, limit = 10, search, searchField, sortBy, sortOrder, filters = {} } = options;
 
   const where: any = { ...filters };
 
   if (search && searchField) {
-    where[searchField] = { contains: search, mode: "insensitive" };
+    where[searchField as string] = { contains: search, mode: "insensitive" };
   }
 
-  // Sorting
-  const orderBy: Prisma.UserOrderByWithRelationInput =
-    sortBy && sortOrder
-      ? { [sortBy]: sortOrder as Prisma.SortOrder }
-      : { createdAt: "desc" };
+  const orderBy = sortBy && sortOrder ? { [sortBy as string]: sortOrder } : { createdAt: "desc" };
 
-  // Total count for pagination
-  const total = await model.count({ where });
-
-  // Data fetch with pagination
-  const data = await model.findMany({
-    skip: (page - 1) * limit,
-    take: limit,
-    where,
-    orderBy,
-  });
+  const total = await model.count({ where } as any);
+  const data = await model.findMany({ where, orderBy, skip: (page - 1) * limit, take: limit } as any);
 
   return {
     meta: {
