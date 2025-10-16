@@ -3,6 +3,7 @@ import { prisma } from "../../config/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { generateToken } from "../../helper/jwtToken";
+import AppError from "../../helper/appError";
 
 const login = async (payload: any) => {
   const result = await prisma.user.findUnique({
@@ -13,13 +14,13 @@ const login = async (payload: any) => {
   });
 
   if(!result) {
-    throw new Error("User not found!"); 
+    throw new AppError("User not found!",400); 
   }
 
   const isPasswordMatch = await bcrypt.compare(payload.password, result?.password as string);
 
   if (!isPasswordMatch) {
-    throw new Error("Invalid password!");
+    throw new AppError("Invalid password!",400);
   }
 
   const token = generateToken({ email: result?.email as string, role: result?.role as string });

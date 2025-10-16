@@ -1,63 +1,62 @@
+import { Prisma } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 
 // Define a custom error interface for better type safety
 interface AppError extends Error {
   statusCode?: number;
   isOperational?: boolean;
+  meta?: {};
 }
 
-const globalErrorHandler = (
-  err: AppError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const globalErrorHandler = (err: AppError, req: Request, res: Response, next: NextFunction) => {
   let statusCode = err.statusCode || 500;
   let success = false;
   let message = err.message || "Something went wrong!";
-  let error = err;
-
-  // Log the error for debugging
-  console.error("Error:", err);
+  let error;
 
   // Handle different types of errors
-  if (err.name === "ValidationError") {
-    statusCode = 500;
-    message = "Validation Error";
-  } else if (err.name === "CastError") {
-    statusCode = 500;
-    message = "Invalid ID format";
-  } else if (err.code === 11000) {
-    statusCode = 401;
-    message = "Duplicate field value entered";
-  } else if (err.name === "JsonWebTokenError") {
-    statusCode = 401;
-    message = "Invalid token";
-  } else if (err.name === "TokenExpiredError") {
-    statusCode = 401;
-    message = "Token expired";
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === "P2002") {
+      statusCode = 409;
+      message = "Duplicate field value entered";
+      error = err.meta?.target as string[];
+    } else if (err.code === "P1000") {
+      statusCode = 403;
+      message = "Authentication failed";
+      error = err.meta?.target as string[];
+    }
+  } else if (err instanceof Prisma.PrismaClientValidationError) {
+    statusCode = 400;
+    message = "Validation error";
+  } else if (err instanceof Prisma.PrismaClientUnknownRequestError) {
+    statusCode = 400;
+    message = "Bad request";
+  } else if (err instanceof Prisma.PrismaClientInitializationError) {
+    statusCode = 400;
+    message = "Prisma client initialization error";
   }
 
   // Don't leak error details in production
   if (process.env.NODE_ENV === "production") {
-    error = { 
+    error = {
       name: err.name,
       message: message,
-      ...(err.isOperational && { stack: err.stack })
+      ...(err.isOperational && { stack: err.stack }),
     };
   }
 
   res.status(statusCode).json({
     success,
     message,
-    error: {
-      name: error.name,
-      message: error.message,
-      ...(process.env.NODE_ENV === "development" && { stack: error.stack })
-    },
-    ...(process.env.NODE_ENV === "development" && { 
-      stack: error.stack 
-    })
+    error: err.meta,
+    // error: {
+    //   name: err.name,
+    //   message: err.message,
+    //   ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    // },
+    // ...(process.env.NODE_ENV === "development" && {
+    //   stack: err.stack,
+    // }),
   });
 };
 

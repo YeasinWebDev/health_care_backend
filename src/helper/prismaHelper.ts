@@ -1,12 +1,12 @@
-
 export interface FindManyOptions<T> {
   page?: number;
   limit?: number;
   search?: string;
-  searchField?: keyof T;
+  searchField?: (keyof T)[] | keyof T;
   sortBy?: keyof T;
   sortOrder?: "asc" | "desc";
   filters?: any;
+  include?: any;
 }
 
 export interface PaginatedResult<T> {
@@ -26,18 +26,32 @@ export async function findManyWithFilters<T, FindManyArgs extends { where?: any;
   },
   options: FindManyOptions<T>
 ): Promise<PaginatedResult<T>> {
-  const { page = 1, limit = 10, search, searchField, sortBy, sortOrder, filters = {} } = options;
+  const { page = 1, limit = 10, search, searchField, sortBy, sortOrder, filters = {},include } = options;
 
   const where: any = { ...filters };
 
   if (search && searchField) {
-    where[searchField as string] = { contains: search, mode: "insensitive" };
+    if (Array.isArray(searchField)) {
+      // 👇 Build OR condition for multiple fields
+      where.OR = searchField.map((field) => ({
+        [field as string]: { contains: search, mode: "insensitive" },
+      }));
+    } else {
+      // 👇 Single field search
+      where[searchField as string] = { contains: search, mode: "insensitive" };
+    }
   }
 
   const orderBy = sortBy && sortOrder ? { [sortBy as string]: sortOrder } : { createdAt: "desc" };
 
   const total = await model.count({ where } as any);
-  const data = await model.findMany({ where, orderBy, skip: (page - 1) * limit, take: limit } as any);
+  const data = await model.findMany({
+    where,
+    orderBy,
+    skip: (page - 1) * limit,
+    take: limit,
+    include,
+  } as any);
 
   return {
     meta: {

@@ -4,6 +4,7 @@ import { uploadToCloudinary } from "../../helper/fileUploder";
 import { createPatientInput } from "./user.interface";
 import bcrypt from "bcryptjs";
 import { findManyWithFilters } from "../../helper/prismaHelper";
+import AppError from "../../helper/appError";
 
 const createPatient = async (payload: createPatientInput, file: Express.Multer.File | undefined) => {
   if (file) {
@@ -21,7 +22,7 @@ const createPatient = async (payload: createPatientInput, file: Express.Multer.F
   });
 
   if (isUserExist) {
-    throw new Error("User already exist!");
+    throw new AppError("User already exist", 400);
   }
 
   const hashedPassword = await bcrypt.hash(payload.password, 10);
@@ -51,7 +52,7 @@ const createPatient = async (payload: createPatientInput, file: Express.Multer.F
 
 const createAdmin = async (body: any, file: Express.Multer.File | undefined) => {
   if (!body) {
-    throw new Error("Admin data is required");
+    return new AppError("Admin data is required", 400);
   }
 
   if (file) {
@@ -91,7 +92,7 @@ const createAdmin = async (body: any, file: Express.Multer.File | undefined) => 
 
 const createDoctor = async (body: any, file: Express.Multer.File | undefined) => {
   if (!body) {
-    throw new Error("Doctor data is required");
+    return new AppError("Doctor data is required", 400);
   }
 
   if (file) {
