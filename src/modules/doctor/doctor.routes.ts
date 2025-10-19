@@ -5,6 +5,8 @@ import { UserRole } from "@prisma/client";
 
 export const doctorRoutes = Router();
 
+doctorRoutes.post("/suggestion", DoctorController.getAISuggestion);
+
 doctorRoutes.get("/", DoctorController.getAllFromDB);
 
 doctorRoutes.patch("/:id", auth(UserRole.DOCTOR), DoctorController.updateDoctor);

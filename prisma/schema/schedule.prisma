@@ -5,6 +5,7 @@ model Schedule {
     createdAt      DateTime         @default(now())
     updatedAt      DateTime         @updatedAt
     doctorSchedule DoctorSchedule[]
+    appointments   Appointment[]
 
     @@map("schedules")
 }
@@ -15,6 +16,8 @@ model DoctorSchedule {
 
     scheduleId String
     schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+    isBooked Boolean @default(false)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

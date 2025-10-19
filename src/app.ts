@@ -9,6 +9,7 @@ import { scheduleRoutes } from "./modules/schedule/schedule.routes";
 import { doctorScheduleRoutes } from "./modules/doctorSchedule/doctorSchedule.routes";
 import { specialtiesRoutes } from "./modules/specialties/specialties.routes";
 import { doctorRoutes } from "./modules/doctor/doctor.routes";
+import { appointmentRoutes } from "./modules/appointment/appointment.routes";
 
 const app: Application = express();
 
@@ -32,6 +33,7 @@ app.use("/api/v1/schedule", scheduleRoutes);
 app.use("/api/v1/doctor-schedule", doctorScheduleRoutes);
 app.use("/api/v1/specialties", specialtiesRoutes);
 app.use("/api/v1/doctor", doctorRoutes);
+app.use("/api/v1/appointment", appointmentRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send({

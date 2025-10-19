@@ -13,6 +13,17 @@ const createDoctorSchedule = async (req: Request, res: Response, next: NextFunct
     });
 }
 
+const deleteDoctorSchedule = async (req: Request, res: Response, next: NextFunction) => {
+    const result = await doctorScheduleService.deleteDoctorSchedule(req.body,req.user as JwtPayload);
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Schedule deleted successfully!",
+        data: result,
+    });
+}
+
 export const doctorScheduleController = {
     createDoctorSchedule,
+    deleteDoctorSchedule
 }

@@ -4,6 +4,16 @@ import sendResponse from "../../shared/sendResponse";
 import { DoctorService } from "./doctor.service";
 import { Doctor } from "@prisma/client";
 
+const getAISuggestion = catchAsync(async (req: Request, res: Response) => {
+  const result = await DoctorService.getAISuggestion(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "AI Suggestion fetched successfully!",
+    data: result,
+  });
+});
+
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   const { page, limit, search, sortBy, sortOrder, email, contactNumber, gender, appointmentFee } = req.query;
 
@@ -57,4 +67,4 @@ const deleteDoctor = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const DoctorController = { getAllFromDB, updateDoctor, getSingleDoctor, deleteDoctor };
+export const DoctorController = {getAISuggestion, getAllFromDB, updateDoctor, getSingleDoctor, deleteDoctor };

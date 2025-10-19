@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "prisma": {
-    "schema": "./prisma/schema"
+    "schema": "./prisma/schema",
+    "engines": {
+      "queryEngineType": "binary"
+    }
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
@@ -21,8 +24,10 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
+    "openai": "^6.5.0",
     "prisma": "^6.16.2",
     "ts-node-dev": "^2.0.0",
+    "uuid": "^13.0.0",
     "zod": "^4.1.12"
   },
   "keywords": [],
