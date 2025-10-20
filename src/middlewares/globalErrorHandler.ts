@@ -14,6 +14,8 @@ const globalErrorHandler = (err: AppError, req: Request, res: Response, next: Ne
   let message = err.message || "Something went wrong!";
   let error;
 
+  console.log(err)
+
   // Handle different types of errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {

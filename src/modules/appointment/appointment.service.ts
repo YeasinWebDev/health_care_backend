@@ -2,6 +2,9 @@ import { JwtPayload } from "jsonwebtoken";
 import { prisma } from "../../config/db";
 import { v4 as uuid } from "uuid";
 import AppError from "../../helper/appError";
+import { stripe } from "../../helper/stripe";
+import { findManyWithFilters } from "../../helper/prismaHelper";
+import { AppointmentStatus, PaymentStatus, UserRole } from "@prisma/client";
 
 const createAppointment = async (payload: { doctorId: string; scheduleId: string }, user: JwtPayload) => {
   const patientData = await prisma.patient.findUniqueOrThrow({
@@ -62,10 +65,89 @@ const createAppointment = async (payload: { doctorId: string; scheduleId: string
       },
     });
 
-    return {appointmentData, transactionData};
+    return { appointmentData, transactionData };
+  });
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    mode: "payment",
+    customer_email: user.email,
+    line_items: [
+      {
+        price_data: {
+          currency: "bdt",
+          product_data: {
+            name: `Appointment with doctor ${doctorData.name}`,
+            description: `Payment for appointment ${result.appointmentData.id}`,
+          },
+          unit_amount: doctorData.appointmentFee * 100,
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: {
+      appointmentId: result.appointmentData.id.toString(),
+      paymentId: result.transactionData.id.toString(),
+    },
+    success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.FRONTEND_URL}/payment-failed`,
+  });
+
+  return { result, paymentUrl: session.url };
+};
+
+const myAppointments = async (user: JwtPayload, page: number, limit: number, status: AppointmentStatus, paymentStatus: PaymentStatus, sortOrder: "asc" | "desc") => {
+  const userFilter = user.role === UserRole.PATIENT ? { patient: { email: user.email } } : { doctor: { email: user.email } };
+
+  const result = await findManyWithFilters(prisma.appointment, {
+    page,
+    limit,
+    sortOrder,
+    filters: {
+      ...userFilter,
+      ...(status ? { status } : {}),
+      ...(paymentStatus ? { paymentStatus } : {}),
+    },
+    include: user.role === UserRole.PATIENT ? { doctor: true, schedule: true, payment: true } : { patient: true, schedule: true, payment: true },
   });
 
   return result;
 };
 
-export const AppointmentService = { createAppointment };
+// task get all data from db for admin
+const getAllAppointments = async () => {
+  return await findManyWithFilters(prisma.appointment, {});
+};
+
+const updateAppointmentStatus = async (appointmentId: string, status: AppointmentStatus, user: JwtPayload) => {
+  const isAppointmentExist = await prisma.appointment.findUnique({
+    where: {
+      id: appointmentId,
+    },
+    include: {
+      doctor: true,
+      patient: true,
+    },
+  });
+
+  if (!isAppointmentExist) {
+    throw new AppError("Appointment not found", 404);
+  }
+
+  if (user.role === UserRole.DOCTOR) {
+    if (user.email !== isAppointmentExist.doctor!.email) {
+      throw new AppError("You are not authorized to update this appointment", 403);
+    } else {
+      return await prisma.appointment.update({
+        where: {
+          id: appointmentId,
+        },
+        data: {
+          status,
+        },
+      });
+    }
+  }
+};
+
+export const AppointmentService = { createAppointment, myAppointments,  getAllAppointments, updateAppointmentStatus };

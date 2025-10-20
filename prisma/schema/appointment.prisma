@@ -45,6 +45,7 @@ model Prescription {
 
     appointment Appointment @relation(fields: [appointmentId], references: [id])
     doctor      Doctor      @relation(fields: [doctorId], references: [id])
+    patient     Patient     @relation(fields: [patientId], references: [id])
 
     @@map("prescriptions")
 }

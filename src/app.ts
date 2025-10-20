@@ -10,8 +10,12 @@ import { doctorScheduleRoutes } from "./modules/doctorSchedule/doctorSchedule.ro
 import { specialtiesRoutes } from "./modules/specialties/specialties.routes";
 import { doctorRoutes } from "./modules/doctor/doctor.routes";
 import { appointmentRoutes } from "./modules/appointment/appointment.routes";
+import { PaymentController } from "./modules/payment/payment.controller";
+import { prescriptionRoutes } from "./modules/prescription/prescription.routes";
 
 const app: Application = express();
+
+app.post("/api/v1/payment/webhook", express.raw({ type: "application/json" }), PaymentController.checkWebhook);
 
 app.use(
   cors({
@@ -34,6 +38,7 @@ app.use("/api/v1/doctor-schedule", doctorScheduleRoutes);
 app.use("/api/v1/specialties", specialtiesRoutes);
 app.use("/api/v1/doctor", doctorRoutes);
 app.use("/api/v1/appointment", appointmentRoutes);
+app.use("/api/v1/prescription",prescriptionRoutes)
 
 app.get("/", (req: Request, res: Response) => {
   res.send({
