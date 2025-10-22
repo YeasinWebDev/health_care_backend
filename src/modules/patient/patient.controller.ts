@@ -3,6 +3,7 @@ import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import { PatientService } from "./patient.service";
 import { Patient } from "@prisma/client";
+import { JwtPayload } from "jsonwebtoken";
 
 const getAllPatients = catchAsync(async (req: Request, res: Response) => {
   const { page, limit, search, email, contactNumber, gender, sortBy, sortOrder } = req.query;
@@ -36,7 +37,7 @@ const getSinglePatient = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updatePatient = catchAsync(async (req: Request, res: Response) => {
-  const result = await PatientService.updatePatient(req.params.id, req.body);
+  const result = await PatientService.updatePatient(req.user as JwtPayload, req.body);
   sendResponse(res, {
     statusCode: 200,
     success: true,

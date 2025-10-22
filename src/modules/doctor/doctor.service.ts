@@ -19,11 +19,11 @@ export const getAISuggestion = async (payload: { symptoms: string }) => {
           specialities: true,
         },
       },
-      doctorSchedules:{
+      doctorSchedules: {
         include: {
           schedule: true,
-        }
-      }
+        },
+      },
     },
   });
 
@@ -123,6 +123,7 @@ const getAllFromDB = async (
           schedule: true,
         },
       },
+      review: true,
     },
   });
 };

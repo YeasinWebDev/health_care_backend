@@ -24,8 +24,8 @@ const scheduleForDoctor = catchAsync(async (req: Request, res: Response) => {
     sortBy as string,
     sortOrder as "asc" | "desc" | undefined,
     req.user as JwtPayload,
-    startDateTime as string || "",
-    endDateTime as string || "",
+    (startDateTime as string) || "",
+    (endDateTime as string) || ""
   );
   sendResponse(res, {
     statusCode: 200,
@@ -65,6 +65,38 @@ const deleteSchedule = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllSchedule = catchAsync(async (req: Request, res: Response) => {
+  const { page, limit } = req.query;
+  const result = await scheduleService.getAllSchedule(Number(page || 1), Number(limit || 10));
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Schedule created successfully!",
+    data: result,
+  });
+});
+
+const getMySchedule = catchAsync(async (req: Request, res: Response) => {
+  const result = await scheduleService.getMySchedule(req.user as JwtPayload);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Schedule created successfully!",
+    data: result,
+  });
+});
+
+const deleteMyScheduleById = catchAsync(async (req: Request, res: Response) => {
+  const { ids } = req.body;
+  const result = await scheduleService.deleteMyScheduleById(ids, req.user as JwtPayload);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Schedule deleted successfully!",
+    data: result,
+  });
+});
+
 export const scheduleController = {
   allSchedule,
   scheduleForDoctor,
@@ -72,4 +104,7 @@ export const scheduleController = {
 
   createSchedule,
   deleteAllSchedule,
+  getAllSchedule,
+  getMySchedule,
+  deleteMyScheduleById
 };

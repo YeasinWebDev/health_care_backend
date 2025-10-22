@@ -5,6 +5,7 @@ import { createPatientInput } from "./user.interface";
 import bcrypt from "bcryptjs";
 import { findManyWithFilters } from "../../helper/prismaHelper";
 import AppError from "../../helper/appError";
+import { JwtPayload } from "jsonwebtoken";
 
 const createPatient = async (payload: createPatientInput, file: Express.Multer.File | undefined) => {
   if (file) {
@@ -154,9 +155,68 @@ const getallFromDB = async (page: number, limit: number, search: string, sortBy?
   return result;
 };
 
+const me = async (user: JwtPayload) => {
+  const result = await prisma.user.findUnique({
+    where: {
+      email: user.email,
+    },
+  });
+  const { password, ...rest } = result!;
+
+  let roleData;
+
+  if (rest.role === UserRole.DOCTOR) {
+    roleData = await prisma.doctor.findUnique({
+      where: {
+        email: user.email,
+      },
+    });
+  } else if (rest.role === UserRole.PATIENT) {
+    roleData = await prisma.patient.findUnique({
+      where: {
+        email: user.email,
+      },
+    });
+  } else if (rest.role === UserRole.ADMIN) {
+    roleData = await prisma.admin.findUnique({
+      where: {
+        email: user.email,
+      },
+    });
+  }
+
+  return {
+    ...rest,
+    roleData,
+  };
+};
+
+const changeProfileStatus = async (id: string, status: UserStatus) => {
+  const isExist = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!isExist) {
+    throw new AppError("User not found", 404);
+  }
+
+  return await prisma.user.update({
+    where: {
+      id,
+    },
+    data: {
+      status,
+    },
+  });
+};
+
 export const UserService = {
   createPatient,
   createAdmin,
   createDoctor,
   getallFromDB,
+  me,
+  changeProfileStatus,
 };

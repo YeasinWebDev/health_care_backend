@@ -48,6 +48,7 @@ const getMyPrescriptions = async (page: number, limit: number, user: JwtPayload)
     },
     include: {
       doctor: true,
+      appointment: true,
     },
   });
 };

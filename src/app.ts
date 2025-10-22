@@ -12,6 +12,7 @@ import { doctorRoutes } from "./modules/doctor/doctor.routes";
 import { appointmentRoutes } from "./modules/appointment/appointment.routes";
 import { PaymentController } from "./modules/payment/payment.controller";
 import { prescriptionRoutes } from "./modules/prescription/prescription.routes";
+import { reviewRouter } from "./modules/review/review.routes";
 
 const app: Application = express();
 
@@ -38,7 +39,8 @@ app.use("/api/v1/doctor-schedule", doctorScheduleRoutes);
 app.use("/api/v1/specialties", specialtiesRoutes);
 app.use("/api/v1/doctor", doctorRoutes);
 app.use("/api/v1/appointment", appointmentRoutes);
-app.use("/api/v1/prescription",prescriptionRoutes)
+app.use("/api/v1/prescription", prescriptionRoutes),
+app.use("/api/v1/review", reviewRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.send({

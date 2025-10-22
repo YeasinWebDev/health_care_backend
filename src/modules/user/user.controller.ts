@@ -4,6 +4,7 @@ import sendResponse from "../../shared/sendResponse";
 import { UserService } from "./user.service";
 import { ISortBy } from "../../type";
 import { UserRole, UserStatus } from "@prisma/client";
+import { JwtPayload } from "jsonwebtoken";
 
 const createPatient = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.createPatient(req.body, req.file);
@@ -56,9 +57,31 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const me = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.me(req.user as JwtPayload);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User data fetched successfully",
+    data: result,
+  });
+});
+
+const changeProfileStatus = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.changeProfileStatus(req.params.id, req.body.status);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User status changed successfully",
+    data: result,
+  });
+});
+
 export const UserController = {
   createPatient,
   createAdmin,
   createDoctor,
   getAllFromDB,
+  me,
+  changeProfileStatus,
 };

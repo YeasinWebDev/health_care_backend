@@ -14,6 +14,7 @@ model Appointment {
     schedule     Schedule?     @relation(fields: [scheduleId], references: [id])
     payment      Payment?
     prescription Prescription?
+    Review       Review?
 
     @@map("appointments")
 }
@@ -48,4 +49,21 @@ model Prescription {
     patient     Patient     @relation(fields: [patientId], references: [id])
 
     @@map("prescriptions")
+}
+
+model Review {
+    id            String   @id @default(uuid())
+    appointmentId String   @unique
+    patientId     String
+    doctorId      String
+    rating        Float
+    comment       String?
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    appointment Appointment @relation(fields: [appointmentId], references: [id])
+    patient     Patient     @relation(fields: [patientId], references: [id])
+    doctor      Doctor      @relation(fields: [doctorId], references: [id])
+
+    @@map("reviews")
 }

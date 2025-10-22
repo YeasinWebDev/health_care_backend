@@ -3,6 +3,7 @@ import { prisma } from "../../config/db";
 import { findManyWithFilters } from "../../helper/prismaHelper";
 import { Prisma } from "@prisma/client";
 import { JwtPayload } from "jsonwebtoken";
+import AppError from "../../helper/appError";
 
 interface ScheduleData {
   startTime: string;
@@ -132,8 +133,63 @@ const deleteSchedule = async (id: string) => {
   return result;
 };
 
+
+const getAllSchedule = async (page: number, limit: number) => {
+  const result = await findManyWithFilters(prisma.schedule, {
+    page,
+    limit
+  });
+  return result;
+};
+
+const getMySchedule = async (user: JwtPayload) => {
+  const result = await prisma.doctorSchedule.findMany({
+    where: {
+      doctor: {
+        email: user.email,
+      },
+    },
+    include: {
+      schedule: true,
+    },
+  });
+  return result;
+};
+
+const deleteMyScheduleById = async (id: string[],user: JwtPayload) => {
+  const isMySchedule = await prisma.doctorSchedule.findMany({
+    where: {
+      doctor:{
+        email: user.email
+      },
+      scheduleId: {
+        in: id
+      }
+    }
+  })
+
+  if(!isMySchedule.length) {
+    throw new AppError("You are not allowed to delete this schedule", 403)
+  }
+
+  const result = await prisma.doctorSchedule.deleteMany({
+    where: {
+      doctor: {
+        email: user.email
+      },
+      scheduleId: {
+        in: id
+      }
+    }
+  });
+  return result;
+}
+
 export const scheduleService = {
   createSchedule,
   scheduleForDoctor,
   deleteSchedule,
+  getAllSchedule,
+  getMySchedule,
+  deleteMyScheduleById
 };

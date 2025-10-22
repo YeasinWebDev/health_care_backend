@@ -23,3 +23,7 @@ userRouters.post("/create-doctor", auth(UserRole.ADMIN), upload.single("file"), 
 });
 
 userRouters.get("/", auth(UserRole.ADMIN, UserRole.DOCTOR), UserController.getAllFromDB);
+
+userRouters.get("/me", auth(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT), UserController.me);
+
+userRouters.patch("/status/:id", auth(UserRole.ADMIN), UserController.changeProfileStatus);

@@ -1,13 +1,14 @@
 import { Router } from "express";
 import { PatientController } from "./patient.controller";
+import { auth } from "../../middlewares/auth";
+import { UserRole } from "@prisma/client";
 
+export const patientRoutes = Router();
 
-export const  patientRoutes = Router()
+patientRoutes.get("/", PatientController.getAllPatients);
 
-patientRoutes.get("/", PatientController.getAllPatients)
+patientRoutes.get("/:id", PatientController.getSinglePatient);
 
-patientRoutes.get("/:id", PatientController.getSinglePatient)
+patientRoutes.patch("/", auth(UserRole.PATIENT), PatientController.updatePatient);
 
-patientRoutes.patch("/:id", PatientController.updatePatient)
-
-patientRoutes.delete("/:id", PatientController.deletePatient)
+patientRoutes.delete("/:id", PatientController.deletePatient);
