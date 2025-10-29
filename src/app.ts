@@ -13,6 +13,9 @@ import { appointmentRoutes } from "./modules/appointment/appointment.routes";
 import { PaymentController } from "./modules/payment/payment.controller";
 import { prescriptionRoutes } from "./modules/prescription/prescription.routes";
 import { reviewRouter } from "./modules/review/review.routes";
+import { AppointmentService } from "./modules/appointment/appointment.service";
+import cron from "node-cron";
+import { metaRoutes } from "./modules/meta/meta.routes";
 
 const app: Application = express();
 
@@ -30,8 +33,17 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// routes
+// cron
+cron.schedule("* * * * *", () => {
+  try {
+    AppointmentService.cancelUnPaidAppointments();
+  } catch (error) {
+    console.log(error);
+  }
+});
 
+
+// routes
 app.use("/api/v1/user", userRouters);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/schedule", scheduleRoutes);
@@ -39,8 +51,9 @@ app.use("/api/v1/doctor-schedule", doctorScheduleRoutes);
 app.use("/api/v1/specialties", specialtiesRoutes);
 app.use("/api/v1/doctor", doctorRoutes);
 app.use("/api/v1/appointment", appointmentRoutes);
-app.use("/api/v1/prescription", prescriptionRoutes),
+app.use("/api/v1/prescription", prescriptionRoutes), 
 app.use("/api/v1/review", reviewRouter);
+app.use("/api/v1/meta", metaRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.send({

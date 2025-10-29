@@ -25,7 +25,9 @@ const login = async (payload: any) => {
 
   const token = generateToken({ email: result?.email as string, role: result?.role as string });
 
-  return { token, user: result };
+  const { password, ...rest } = result;
+
+  return { token, user: rest };
 };
 
 const refreshToken = async (token: string) => {
