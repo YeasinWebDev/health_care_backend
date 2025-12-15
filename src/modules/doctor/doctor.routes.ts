@@ -9,7 +9,7 @@ doctorRoutes.post("/suggestion", DoctorController.getAISuggestion);
 
 doctorRoutes.get("/", DoctorController.getAllFromDB);
 
-doctorRoutes.patch("/:id", auth(UserRole.DOCTOR), DoctorController.updateDoctor);
+doctorRoutes.patch("/:id", DoctorController.updateDoctor);
 
 doctorRoutes.get("/:id", auth(UserRole.DOCTOR, UserRole.ADMIN, UserRole.PATIENT), DoctorController.getSingleDoctor);
 
