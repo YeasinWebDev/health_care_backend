@@ -11,6 +11,6 @@ doctorRoutes.get("/", DoctorController.getAllFromDB);
 
 doctorRoutes.patch("/:id", auth(UserRole.DOCTOR), DoctorController.updateDoctor);
 
-doctorRoutes.get("/:id", auth(UserRole.DOCTOR, UserRole.ADMIN), DoctorController.getSingleDoctor);
+doctorRoutes.get("/:id", auth(UserRole.DOCTOR, UserRole.ADMIN, UserRole.PATIENT), DoctorController.getSingleDoctor);
 
 doctorRoutes.delete("/:id", auth(UserRole.ADMIN, UserRole.DOCTOR), DoctorController.deleteDoctor);

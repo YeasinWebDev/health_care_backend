@@ -64,7 +64,43 @@ const deleteDoctorSchedule = async (data: { scheduleIds: string[] }, user: JwtPa
   return ans;
 };
 
+const mySchedule = async (user: JwtPayload, page: number, limit: number, isBooked: boolean) => {
+  const doctorData = await prisma.doctor.findUnique({
+    where: {
+      email: user.email,
+    },
+  });
+
+  if (!doctorData) {
+    throw new Error("You are not a doctor");
+  }
+
+  const ans = await prisma.doctorSchedule.findMany({
+    where: {
+      doctorId: doctorData.id,
+      ...(isBooked ? { isBooked }: {}),
+    },
+    include: {
+      schedule: true,
+    },
+    skip: (page - 1) * limit,
+    take: limit,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const meta= {
+      total: ans.length,
+      page,
+      limit,
+    }
+
+  return {data: ans,meta};
+};
+
 export const doctorScheduleService = {
   createDoctorSchedule,
-  deleteDoctorSchedule
+  deleteDoctorSchedule,
+  mySchedule,
 };

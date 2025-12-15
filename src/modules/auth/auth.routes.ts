@@ -14,6 +14,10 @@ authRoutes.post(
     "/login",
     authController.login
 )
+authRoutes.post(
+    "/logout",
+    authController.logout
+)
 
 authRoutes.post(
     '/refresh-token',

@@ -15,13 +15,14 @@ const getAISuggestion = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
-  const { page, limit, search, sortBy, sortOrder, email, contactNumber, gender, appointmentFee } = req.query;
+  const { page, limit, searchTerm:search, sortBy, sortOrder, email, specialties, contactNumber, gender, appointmentFee } = req.query;
 
   const result = await DoctorService.getAllFromDB(
     Number(page || 1),
     Number(limit || 10),
     search as string,
     email as string,
+    specialties as string[],
     contactNumber as string,
     gender as string,
     appointmentFee as string,

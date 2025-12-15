@@ -12,5 +12,7 @@ export interface IDoctorUpdateInput{
     currentWorkPlace: string;
     designation: string;
     isDeleted: boolean;
-    specialties: string[]
+    specialties: string[];
+    doctorSchedules: any[];
+    review: any[];
 }

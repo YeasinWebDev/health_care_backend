@@ -93,6 +93,7 @@ const getAllFromDB = async (
   limit: number,
   search: string,
   email: string,
+  specialties: string[], 
   contactNumber: string,
   gender: string,
   appointmentFee: string,
@@ -111,7 +112,21 @@ const getAllFromDB = async (
       ...(contactNumber ? { contactNumber } : {}),
       ...(gender ? { gender } : {}),
       ...(appointmentFee ? { appointmentFee } : {}),
+      ...(specialties && specialties.length > 0
+        ? {
+            doctorSpecialties: {
+              some: {
+                specialities: {
+                  title: {
+                    in: Array.isArray(specialties) ? specialties : [specialties],
+                  },
+                },
+              },
+            },
+          }
+        : {}),
     },
+
     include: {
       doctorSpecialties: {
         include: {
@@ -120,7 +135,7 @@ const getAllFromDB = async (
       },
       doctorSchedules: {
         include: {
-          schedule: true,
+          schedule:true ,
         },
       },
       review: true,
@@ -140,10 +155,10 @@ const updateDoctor = async (id: string, payload: Partial<IDoctorUpdateInput>) =>
   }
 
   return await prisma.$transaction(async (tx) => {
-    const { specialties, ...rest } = payload;
+    const { specialties, doctorSchedules, review, ...rest } = payload;
 
     // update specialties
-    if (specialties) {
+    if (specialties && specialties?.length > 0) {
       await tx.doctorSpecialties.deleteMany({
         where: {
           doctorId: id,

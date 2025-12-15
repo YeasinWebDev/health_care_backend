@@ -22,6 +22,7 @@ export const createAdminValidationSchema = z.object({
   contactNumber: z.string({
     error: "Contact Number is required!",
   }),
+  address: z.string().optional(),
 });
 
 export const createDoctorValidationSchema = z.object({
@@ -34,14 +35,18 @@ export const createDoctorValidationSchema = z.object({
   email: z.string({
     error: "Email is required!",
   }),
-  contactNumber: z.string({
+  contactNumber: z.string({ 
     error: "Contact Number is required!",
   }),
-  address: z.string().optional(),
+  address: z.string({
+    error: "Address is required!",
+  }),
   registrationNumber: z.string({
     error: "Reg number is required",
   }),
-  experience: z.number().optional(),
+  experience: z.number({
+    error: "Experience is required",
+  }),
   gender: z.enum([Gender.MALE, Gender.FEMALE]),
   appointmentFee: z.number({
     error: "appointment fee is required",
@@ -54,5 +59,8 @@ export const createDoctorValidationSchema = z.object({
   }),
   designation: z.string({
     error: "Designation is required!",
+  }),
+  specialties: z.array(z.string(), {
+    error: "Specialties is required!",
   }),
 });

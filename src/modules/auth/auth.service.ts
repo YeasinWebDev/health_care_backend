@@ -45,13 +45,14 @@ const refreshToken = async (token: string) => {
     },
   });
 
-  const accessToken = generateToken({
+   const tokenObj = generateToken({
     email: userData.email,
     role: userData.role,
   });
+  
 
   return {
-    accessToken,
+    tokenObj,
     needPasswordChange: userData.needPasswordChange,
   };
 };
@@ -119,7 +120,7 @@ const forgotPassword = async (payload: { email: string }) => {
   );
 };
 
-const resetPassword = async (token: string, payload: { id: string; password: string }) => {
+const resetPassword = async (token: string, payload: { id: string; newPassword: string }) => {
   const userData = await prisma.user.findUniqueOrThrow({
     where: {
       id: payload.id,
@@ -134,7 +135,7 @@ const resetPassword = async (token: string, payload: { id: string; password: str
   }
 
   // hash password
-  const password = await bcrypt.hash(payload.password, Number(13));
+  const password = await bcrypt.hash(payload.newPassword, Number(13));
 
   // update into database
   await prisma.user.update({
@@ -143,11 +144,13 @@ const resetPassword = async (token: string, payload: { id: string; password: str
     },
     data: {
       password,
+      needPasswordChange: false,
     },
   });
 };
 
 const getMe = async (session: { accessToken: string }) => {
+  console.log(session,"session")
   const accessToken = session.accessToken;
   const decodedData = verifyToken(accessToken);
 

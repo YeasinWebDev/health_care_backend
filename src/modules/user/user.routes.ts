@@ -22,8 +22,22 @@ userRouters.post("/create-doctor", auth(UserRole.ADMIN), upload.single("file"), 
   return UserController.createDoctor(req, res, next);
 });
 
+userRouters.get("/me", auth(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT), UserController.me);
 userRouters.get("/", auth(UserRole.ADMIN, UserRole.DOCTOR), UserController.getAllFromDB);
 
-userRouters.get("/me", auth(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT), UserController.me);
+userRouters.get("/:id", auth(UserRole.ADMIN, UserRole.DOCTOR), UserController.getUserById);
+
+userRouters.patch("/update-my-profile", auth(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT), upload.single("file"), (req: Request, res: Response, next: NextFunction) => {
+  req.body = JSON.parse(req.body.data);
+  if (req.body?.experience && req.body?.appointmentFee) {
+    req.body.experience = Number(req.body?.experience);
+    req.body.appointmentFee = Number(req.body?.appointmentFee);
+  }
+  return UserController.updateMyProfile(req, res, next);
+});
+
+userRouters.patch("/:id", auth(UserRole.ADMIN), UserController.updateAdmin);
 
 userRouters.patch("/status/:id", auth(UserRole.ADMIN), UserController.changeProfileStatus);
+
+userRouters.delete("/:id", auth(UserRole.ADMIN), UserController.deleteAdmin);

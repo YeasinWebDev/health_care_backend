@@ -26,6 +26,10 @@ const getAllPatients = async (
       ...(contactNumber ? { contactNumber } : {}),
       ...(gender ? { gender } : {}),
     },
+    include: {
+      patientHealthData: true,
+      medicalReport: true,
+    },
   });
 };
 

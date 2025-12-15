@@ -15,7 +15,7 @@ const createSchedule = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const scheduleForDoctor = catchAsync(async (req: Request, res: Response) => {
+const scheduleForDoctor = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
   const { page, limit, startDateTime, endDateTime, sortBy, sortOrder } = req.query;
 
   const result = await scheduleService.scheduleForDoctor(
@@ -66,8 +66,8 @@ const deleteSchedule = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllSchedule = catchAsync(async (req: Request, res: Response) => {
-  const { page, limit } = req.query;
-  const result = await scheduleService.getAllSchedule(Number(page || 1), Number(limit || 10));
+  const { page, limit,startDate,endDate } = req.query;
+  const result = await scheduleService.getAllSchedule(Number(page || 1), Number(limit || 10),startDate as string,endDate as string);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -76,7 +76,7 @@ const getAllSchedule = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getMySchedule = catchAsync(async (req: Request, res: Response) => {
+const getMySchedule = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
   const result = await scheduleService.getMySchedule(req.user as JwtPayload);
   sendResponse(res, {
     statusCode: 200,
@@ -86,13 +86,23 @@ const getMySchedule = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const deleteMyScheduleById = catchAsync(async (req: Request, res: Response) => {
+const deleteMyScheduleById = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
   const { ids } = req.body;
   const result = await scheduleService.deleteMyScheduleById(ids, req.user as JwtPayload);
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Schedule deleted successfully!",
+    data: result,
+  });
+});
+
+const getScheduleById = catchAsync(async (req: Request, res: Response) => {
+  const result = await scheduleService.getScheduleById(req.params.id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Schedule created successfully!",
     data: result,
   });
 });
@@ -106,5 +116,6 @@ export const scheduleController = {
   deleteAllSchedule,
   getAllSchedule,
   getMySchedule,
-  deleteMyScheduleById
+  deleteMyScheduleById,
+  getScheduleById
 };

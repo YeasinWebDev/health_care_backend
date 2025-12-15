@@ -17,7 +17,7 @@ const createPatient = catchAsync(async (req: Request, res: Response) => {
 });
 
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.createAdmin(req.body, req.file);
+const result = await UserService.createAdmin(req.body, req.file);
   sendResponse(res, {
     statusCode: 201,
     success: true,
@@ -57,7 +57,7 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const me = catchAsync(async (req: Request, res: Response) => {
+const me = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
   const result = await UserService.me(req.user as JwtPayload);
   sendResponse(res, {
     statusCode: 200,
@@ -77,6 +77,51 @@ const changeProfileStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getUserById = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getUserById(req.params.id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User data fetched successfully",
+    data: result,
+  });
+});
+
+
+const updateAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.updateAdmin(req.params.id, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Admin updated successfully!",
+    data: result,
+  });
+});
+
+const deleteAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.deleteAdmin(req.params.id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Admin deleted successfully!",
+    data: result,
+  });
+})
+
+const updateMyProfile = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
+
+    const user = req.user;
+
+    const result = await UserService.updateMyProfie(user as JwtPayload,req.body, req.file);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "My profile updated!",
+        data: result
+    })
+});
+
 export const UserController = {
   createPatient,
   createAdmin,
@@ -84,4 +129,8 @@ export const UserController = {
   getAllFromDB,
   me,
   changeProfileStatus,
+  getUserById,
+  updateAdmin,
+  deleteAdmin,
+  updateMyProfile
 };

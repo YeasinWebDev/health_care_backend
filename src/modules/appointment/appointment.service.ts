@@ -7,6 +7,7 @@ import { findManyWithFilters } from "../../helper/prismaHelper";
 import { AppointmentStatus, PaymentStatus, UserRole } from "@prisma/client";
 
 const createAppointment = async (payload: { doctorId: string; scheduleId: string }, user: JwtPayload) => {
+  console.log(payload);
   const patientData = await prisma.patient.findUniqueOrThrow({
     where: {
       email: user.email,
@@ -108,11 +109,16 @@ const myAppointments = async (user: JwtPayload, page: number, limit: number, sta
       ...(status ? { status } : {}),
       ...(paymentStatus ? { paymentStatus } : {}),
     },
-    include: user.role === UserRole.PATIENT ? { doctor: true, schedule: true, payment: true } : { patient: true, schedule: true, payment: true },
+    include: user.role === UserRole.PATIENT ? { doctor: true, schedule: true, payment: true, Review:true } : { patient: true, schedule: true, payment: true, prescription: true, Review: true },
+    // include:
+    //   user.role === UserRole.PATIENT
+    //     ? { doctor: true, schedule: true, review: true, prescription: true, payment: true }
+    //     : { patient: { include: { medicalReports: true, patientHealthData: true } }, schedule: true, payment: true, prescription: true, review: true },
   });
+  console.log(result)
 
   return result;
-};
+}
 
 // task get all data from db for admin
 const getAllAppointments = async () => {

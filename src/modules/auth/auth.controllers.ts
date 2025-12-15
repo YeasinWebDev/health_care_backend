@@ -15,15 +15,27 @@ const login = catchAsync(async (req: Request, res: Response) => {
     statusCode: 200,
     success: true,
     message: "Login successfully!",
-    data: result.user,
+    data: result,
   });
 });
 
+const logout = catchAsync(async (req: Request, res: Response) => {
+  res.cookie("accessToken", "", { secure: true, sameSite: "none", httpOnly: true, maxAge: 0 });
+  res.cookie("refreshToken", "", { secure: true, sameSite: "none", httpOnly: true, maxAge: 0 });
+  
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Logout successfully!",
+    data: {},
+  });
+})
+
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-  const { refreshToken } = req.cookies;
+  const { refreshToken } = req.body;
 
   const result = await authService.refreshToken(refreshToken);
-  res.cookie("accessToken", result.accessToken, {
+  res.cookie("accessToken", result.tokenObj.accessToken, {
     secure: true,
     httpOnly: true,
     sameSite: "none",
@@ -33,9 +45,10 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Access token genereated successfully!",
+    message: "Access token generated successfully!",
     data: {
-      message: "Access token genereated successfully!",
+      result: result.tokenObj,
+      message: "Access token generated successfully!",
     },
   });
 });
@@ -66,7 +79,7 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
 
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
-
+console.log(req.body,'body')
   await authService.resetPassword(token, req.body);
 
   sendResponse(res, {
@@ -89,4 +102,4 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const authController = { login, refreshToken, changePassword, forgotPassword, resetPassword, getMe };
+export const authController = { login, logout, refreshToken, changePassword, forgotPassword, resetPassword, getMe };

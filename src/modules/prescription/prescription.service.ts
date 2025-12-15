@@ -5,11 +5,12 @@ import { prisma } from "../../config/db";
 import { findManyWithFilters } from "../../helper/prismaHelper";
 
 const createPrescription = async (user: JwtPayload, payload: Partial<Prescription>) => {
+  console.log(payload)
   const appointmentData = await prisma.appointment.findUniqueOrThrow({
     where: {
       id: payload.appointmentId,
-      status: AppointmentStatus.COMPLETED,
-      paymentStatus: PaymentStatus.PAID,
+      // status: AppointmentStatus.COMPLETED,
+      // paymentStatus: PaymentStatus.PAID,
     },
     include: {
       doctor: true,
@@ -26,7 +27,7 @@ const createPrescription = async (user: JwtPayload, payload: Partial<Prescriptio
       doctorId: appointmentData.doctorId,
       patientId: appointmentData.patientId,
       instructions: payload.instructions as string,
-      followupDate: payload.followupDate || null,
+      followupDate: payload.followupDate ,
     },
     include: {
       patient: true,

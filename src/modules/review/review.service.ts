@@ -62,7 +62,7 @@ const createReview = async (user: JwtPayload, payload: any) => {
 };
 
 const getAllReviews = async (page: number, limit: number) => {
-  return await findManyWithFilters(prisma.review, { page, limit });
+  return await findManyWithFilters(prisma.review, { page, limit ,include : { doctor: true, patient: true }});
 };
 
 export const ReviewService = { createReview , getAllReviews};

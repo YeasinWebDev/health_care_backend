@@ -16,6 +16,7 @@ import { reviewRouter } from "./modules/review/review.routes";
 import { AppointmentService } from "./modules/appointment/appointment.service";
 import cron from "node-cron";
 import { metaRoutes } from "./modules/meta/meta.routes";
+import { patientRoutes } from "./modules/patient/patient.routes";
 
 const app: Application = express();
 
@@ -34,13 +35,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // cron
-cron.schedule("* * * * *", () => {
-  try {
-    AppointmentService.cancelUnPaidAppointments();
-  } catch (error) {
-    console.log(error);
-  }
-});
+// cron.schedule("* * * * *", () => {
+//   try {
+//     AppointmentService.cancelUnPaidAppointments();
+//   } catch (error) {
+//     console.log(error);
+//   }
+// });
 
 
 // routes
@@ -54,6 +55,7 @@ app.use("/api/v1/appointment", appointmentRoutes);
 app.use("/api/v1/prescription", prescriptionRoutes), 
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/meta", metaRoutes);
+app.use("/api/v1/patient",patientRoutes)
 
 app.get("/", (req: Request, res: Response) => {
   res.send({

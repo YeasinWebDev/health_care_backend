@@ -2,7 +2,7 @@ export interface FindManyOptions<T> {
   page?: number;
   limit?: number;
   search?: string;
-  searchField?: (keyof T)[] | keyof T;
+  searchField?: string | string[];
   sortBy?: keyof T;
   sortOrder?: "asc" | "desc";
   filters?: any;
@@ -26,16 +26,31 @@ export async function findManyWithFilters<T, FindManyArgs extends { where?: any;
   },
   options: FindManyOptions<T>
 ): Promise<PaginatedResult<T>> {
-  const { page = 1, limit = 10, search, searchField, sortBy, sortOrder, filters = {},include } = options;
+  const { page = 1, limit = 10, search, searchField, sortBy, sortOrder, filters = {}, include } = options;
 
   const where: any = { ...filters };
 
   if (search && searchField) {
     if (Array.isArray(searchField)) {
       // 👇 Build OR condition for multiple fields
-      where.OR = searchField.map((field) => ({
-        [field as string]: { contains: search, mode: "insensitive" },
-      }));
+      where.OR = searchField.map((field) => {
+        const keys = (field as string).split(".");
+
+        // Build nested structure dynamically
+        let condition: any = {};
+        let current = condition;
+
+        keys.forEach((key, index) => {
+          if (index === keys.length - 1) {
+            current[key] = { contains: search, mode: "insensitive" };
+          } else {
+            current[key] = {};
+            current = current[key];
+          }
+        });
+
+        return condition;
+      });
     } else {
       // 👇 Single field search
       where[searchField as string] = { contains: search, mode: "insensitive" };

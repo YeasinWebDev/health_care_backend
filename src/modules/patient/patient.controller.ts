@@ -36,7 +36,7 @@ const getSinglePatient = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updatePatient = catchAsync(async (req: Request, res: Response) => {
+const updatePatient = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
   const result = await PatientService.updatePatient(req.user as JwtPayload, req.body);
   sendResponse(res, {
     statusCode: 200,

@@ -4,8 +4,10 @@ import { ReviewService } from "./review.service";
 import sendResponse from "../../shared/sendResponse";
 import { JwtPayload } from "jsonwebtoken";
 
-const createReview = catchAsync(async (req: Request, res: Response) => {
+const createReview = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
+  console.log(req.body)
   const result = await ReviewService.createReview(req.user as JwtPayload, req.body);
+  console.log(result)
   sendResponse(res, {
     statusCode: 200,
     success: true,

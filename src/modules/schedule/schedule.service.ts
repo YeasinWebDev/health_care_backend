@@ -22,33 +22,25 @@ const createSchedule = async (data: ScheduleData) => {
   const lastDate = new Date(endDate);
 
   while (currentDate <= lastDate) {
-    const startDateTime = new Date(
-      addMinutes(
-        addHours(
-          `${format(currentDate, "yyyy-MM-dd")}`,
-          Number(startTime.split(":")[0]) // 11:00
-        ),
-        Number(startTime.split(":")[1])
-      )
-    );
 
-    const endDateTime = new Date(
-      addMinutes(
-        addHours(
-          `${format(currentDate, "yyyy-MM-dd")}`,
-          Number(endTime.split(":")[0]) // 11:00
-        ),
-        Number(endTime.split(":")[1])
-      )
-    );
+    const y = currentDate.getFullYear();
+    const m = currentDate.getMonth();
+    const d = currentDate.getDate();
+
+    const [sH, sM] = startTime.split(":").map(Number);
+    const [eH, eM] = endTime.split(":").map(Number);
+
+    let startDateTime = new Date(y, m, d, sH, sM);
+    const endDateTime = new Date(y, m, d, eH, eM);
 
     while (startDateTime < endDateTime) {
-      const slotStartDateTime = startDateTime; // 10:30
-      const slotEndDateTime = addMinutes(startDateTime, intervalTime); // 11:00
+      const slotStart = new Date(startDateTime);
+      const slotEnd = new Date(startDateTime);
+      slotEnd.setMinutes(slotEnd.getMinutes() + intervalTime);
 
       const scheduleData = {
-        startDateTime: slotStartDateTime,
-        endDateTime: slotEndDateTime,
+        startDateTime: slotStart,
+        endDateTime: slotEnd,
       };
 
       const existingSchedule = await prisma.schedule.findFirst({
@@ -62,7 +54,7 @@ const createSchedule = async (data: ScheduleData) => {
         schedules.push(result);
       }
 
-      slotStartDateTime.setMinutes(slotStartDateTime.getMinutes() + intervalTime);
+      startDateTime.setMinutes(startDateTime.getMinutes() + intervalTime);
     }
 
     currentDate.setDate(currentDate.getDate() + 1);
@@ -70,6 +62,7 @@ const createSchedule = async (data: ScheduleData) => {
 
   return schedules;
 };
+
 
 const scheduleForDoctor = async (
   page: number,
@@ -133,11 +126,19 @@ const deleteSchedule = async (id: string) => {
   return result;
 };
 
+const getAllSchedule = async (page: number, limit: number, startDate: string, endDate: string) => {
+  const filters: any = {};
+  if (startDate && endDate) {
+  filters.AND = [
+    { startDateTime: { gte: new Date(startDate) } },
+    { endDateTime: { lt: new Date(new Date(endDate).setDate(new Date(endDate).getDate() + 1)) } },
+  ];
+}
 
-const getAllSchedule = async (page: number, limit: number) => {
   const result = await findManyWithFilters(prisma.schedule, {
     page,
-    limit
+    limit,
+    filters,
   });
   return result;
 };
@@ -156,34 +157,43 @@ const getMySchedule = async (user: JwtPayload) => {
   return result;
 };
 
-const deleteMyScheduleById = async (id: string[],user: JwtPayload) => {
+const deleteMyScheduleById = async (id: string[], user: JwtPayload) => {
   const isMySchedule = await prisma.doctorSchedule.findMany({
     where: {
-      doctor:{
-        email: user.email
+      doctor: {
+        email: user.email,
       },
       scheduleId: {
-        in: id
-      }
-    }
-  })
+        in: id,
+      },
+    },
+  });
 
-  if(!isMySchedule.length) {
-    throw new AppError("You are not allowed to delete this schedule", 403)
+  if (!isMySchedule.length) {
+    throw new AppError("You are not allowed to delete this schedule", 403);
   }
 
   const result = await prisma.doctorSchedule.deleteMany({
     where: {
       doctor: {
-        email: user.email
+        email: user.email,
       },
       scheduleId: {
-        in: id
-      }
-    }
+        in: id,
+      },
+    },
   });
   return result;
-}
+};
+
+const getScheduleById = async (id: string) => {
+  const result = await prisma.schedule.findUnique({
+    where: {
+      id,
+    },
+  });
+  return result;
+};
 
 export const scheduleService = {
   createSchedule,
@@ -191,5 +201,6 @@ export const scheduleService = {
   deleteSchedule,
   getAllSchedule,
   getMySchedule,
-  deleteMyScheduleById
+  deleteMyScheduleById,
+  getScheduleById
 };

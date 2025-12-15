@@ -5,7 +5,8 @@ import { JwtPayload } from "jsonwebtoken";
 export const auth = (...roles: string[]) => {
   return async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
     try {
-      const token = req.cookies.accessToken;
+      const token = req.cookies.accessToken || req.headers.authorization;
+
       if (!token) {
         return res.status(401).json({
           success: false,

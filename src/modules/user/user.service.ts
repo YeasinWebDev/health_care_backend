@@ -1,4 +1,4 @@
-import { User, UserRole, UserStatus } from "@prisma/client";
+import { Admin, Doctor, Patient, User, UserRole, UserStatus } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { uploadToCloudinary } from "../../helper/fileUploder";
 import { createPatientInput } from "./user.interface";
@@ -52,6 +52,7 @@ const createPatient = async (payload: createPatientInput, file: Express.Multer.F
 };
 
 const createAdmin = async (body: any, file: Express.Multer.File | undefined) => {
+  console.log(body, "body");
   if (!body) {
     return new AppError("Admin data is required", 400);
   }
@@ -74,6 +75,7 @@ const createAdmin = async (body: any, file: Express.Multer.File | undefined) => 
     email: body.email,
     profilePhoto: body.profilePhoto,
     contactNumber: body.contactNumber,
+    address: body.address || "",
   };
 
   const result = await prisma.$transaction(async (transactionClient) => {
@@ -132,6 +134,13 @@ const createDoctor = async (body: any, file: Express.Multer.File | undefined) =>
       data: doctorData,
     });
 
+    await transactionClient.doctorSpecialties.createMany({
+      data: body.specialties.map((speciality: string) => ({
+        specialitiesId: speciality,
+        doctorId: createdDoctorData.id,
+      })),
+    });
+
     return createdDoctorData;
   });
 
@@ -143,12 +152,17 @@ const getallFromDB = async (page: number, limit: number, search: string, sortBy?
     page,
     limit,
     search,
-    searchField: "email",
+    searchField: ["email", "admin.name", "doctor.name", "patient.name"],
     sortBy,
     sortOrder,
     filters: {
       ...(role ? { role } : {}),
       ...(status ? { status } : {}),
+    },
+    include: {
+      patient: true,
+      doctor: true,
+      admin: true,
     },
   });
 
@@ -212,6 +226,110 @@ const changeProfileStatus = async (id: string, status: UserStatus) => {
   });
 };
 
+const getUserById = async (id: string) => {
+  const result = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+  });
+  return result;
+};
+
+const updateAdmin = async (id: string, body: Partial<Admin>) => {
+  const isExist = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!isExist) {
+    throw new AppError("Admin not found", 404);
+  }
+  const result = await prisma.admin.update({
+    where: {
+      email: isExist.email,
+    },
+    data: {
+      name: body.name,
+      email: body.email,
+      contactNumber: body.contactNumber,
+      address: body.address,
+    },
+  });
+
+  return result;
+};
+
+const deleteAdmin = async (id: string) => {
+  const res = await prisma.$transaction(async (transactionClient) => {
+    const isExist = await transactionClient.user.findUnique({
+      where: { id },
+    });
+
+    if (!isExist) {
+      throw new Error("Admin not found!");
+    }
+
+    const result = await transactionClient.admin.delete({
+      where: { email: isExist.email },
+    });
+
+    await transactionClient.user.delete({
+      where: { id },
+    });
+
+    return result;
+  });
+
+  return res;
+};
+
+const updateMyProfie = async (user: JwtPayload,body: Partial<Admin> | Partial<Doctor> | Partial<Patient>, file: Express.Multer.File | undefined) => {
+  if(!body)return null
+
+    const userInfo = await prisma.user.findUniqueOrThrow({
+        where: {
+            email: user?.email,
+            status: UserStatus.ACTIVE
+        }
+    });
+
+    
+    if (file) {
+        const upload = await uploadToCloudinary(file);
+        body.profilePhoto = upload?.secure_url;
+    }
+
+    let profileInfo;
+
+    if (userInfo.role === UserRole.ADMIN) {
+        profileInfo = await prisma.admin.update({
+            where: {
+                email: userInfo.email
+            },
+            data: body as Admin
+        })
+    }
+    else if (userInfo.role === UserRole.DOCTOR) {
+        profileInfo = await prisma.doctor.update({
+            where: {
+                email: userInfo.email
+            },
+            data: body as Doctor
+        })
+    }
+    else if (userInfo.role === UserRole.PATIENT) {
+        profileInfo = await prisma.patient.update({
+            where: {
+                email: userInfo.email
+            },
+            data: body as Patient
+        })
+    }
+
+    return { ...profileInfo };
+}
+
 export const UserService = {
   createPatient,
   createAdmin,
@@ -219,4 +337,8 @@ export const UserService = {
   getallFromDB,
   me,
   changeProfileStatus,
+  getUserById,
+  updateAdmin,
+  deleteAdmin,
+  updateMyProfie
 };

@@ -5,6 +5,7 @@ import { UserRole } from "@prisma/client";
  
 export const doctorScheduleRoutes = Router();
 
+doctorScheduleRoutes.get("/my-schedule", auth(UserRole.DOCTOR), doctorScheduleController.mySchedule);
 doctorScheduleRoutes.post("/", auth(UserRole.DOCTOR), doctorScheduleController.createDoctorSchedule);
 
 doctorScheduleRoutes.delete("/", auth(UserRole.DOCTOR), doctorScheduleController.deleteDoctorSchedule);
