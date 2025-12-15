@@ -24,7 +24,7 @@ app.post("/api/v1/payment/webhook", express.raw({ type: "application/json" }), P
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000","https://health-care-frontend-five.vercel.app"],
     credentials: true,
   })
 );
