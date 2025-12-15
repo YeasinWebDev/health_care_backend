@@ -9,8 +9,8 @@ doctorRoutes.post("/suggestion", DoctorController.getAISuggestion);
 
 doctorRoutes.get("/", DoctorController.getAllFromDB);
 
-doctorRoutes.patch("/:id", DoctorController.updateDoctor);
+doctorRoutes.patch("/:id", auth(UserRole.ADMIN, UserRole.DOCTOR), DoctorController.updateDoctor);
 
-doctorRoutes.get("/:id", auth(UserRole.DOCTOR, UserRole.ADMIN, UserRole.PATIENT), DoctorController.getSingleDoctor);
+doctorRoutes.get("/:id", DoctorController.getSingleDoctor);
 
 doctorRoutes.delete("/:id", auth(UserRole.ADMIN, UserRole.DOCTOR), DoctorController.deleteDoctor);
