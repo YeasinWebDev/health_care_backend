@@ -14,7 +14,6 @@
     "build": "tsc",
     "start": "node ./dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-
     "postinstall": "prisma generate --schema=./prisma/schema"
   },
   "dependencies": {
@@ -27,6 +26,7 @@
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",

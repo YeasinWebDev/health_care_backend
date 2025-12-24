@@ -33,6 +33,7 @@ const createPatient = async (payload: createPatientInput, file: Express.Multer.F
       data: {
         email: payload.email,
         password: hashedPassword,
+        needPasswordChange:false
       },
     });
     let patient = await tx.patient.create({

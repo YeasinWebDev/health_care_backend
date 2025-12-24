@@ -83,10 +83,7 @@ Return the response in JSON format like:
     doctor.doctorSpecialties.some((ds) => ds.specialities.title.toLowerCase().includes(suggestion.recommendedSpecialty?.toLowerCase().trim() || ""))
   );
 
-  return {
-    aiSuggestion: suggestion,
-    doctors: recommendedDoctors,
-  };
+  return recommendedDoctors
 };
 const getAllFromDB = async (
   page: number,

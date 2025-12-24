@@ -41,5 +41,17 @@ authRoutes.post(
 
 authRoutes.post(
     '/reset-password',
+    (req, res, next) => {
+        // check if user is authenticated
+        if(!req.headers.authorization && req.cookies.accessToken){
+            auth(
+                UserRole.ADMIN,
+                UserRole.DOCTOR,
+                UserRole.PATIENT
+            )(req, res, next)
+        }else{
+            next()
+        }
+    },
     authController.resetPassword
 )

@@ -46,4 +46,31 @@ const updateAppointmentStatus = catchAsync(async (req: Request & { user?: JwtPay
   });
 });
 
-export const AppointmentController = { createAppointment, myAppointments, getAllAppointments, updateAppointmentStatus };
+const createAppointmentWithPayLater = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
+    const user = req.user;
+
+    const result = await AppointmentService.createAppointmentWithPayLater(user as JwtPayload, req.body);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Appointment booked successfully! You can pay later.",
+        data: result
+    })
+});
+
+const initiatePayment = catchAsync(async (req: Request & { user?: JwtPayload } , res: Response) => {
+    const user = req.user;
+    const { id } = req.params;
+
+    const result = await AppointmentService.initiatePaymentForAppointment(id, user as JwtPayload);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "Payment session created successfully",
+        data: result
+    })
+});
+
+export const AppointmentController = { createAppointment, myAppointments, getAllAppointments, updateAppointmentStatus , createAppointmentWithPayLater, initiatePayment };

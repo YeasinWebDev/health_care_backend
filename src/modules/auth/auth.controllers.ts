@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import { authService } from "./auth.service";
+import { JwtPayload } from "jsonwebtoken";
 
 const login = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.login(req.body);
@@ -77,10 +78,11 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const resetPassword = catchAsync(async (req: Request, res: Response) => {
-  const token = req.headers.authorization || "";
-console.log(req.body,'body')
-  await authService.resetPassword(token, req.body);
+const resetPassword = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
+  const token = req.headers.authorization || null;
+  const user = req.user
+  
+  await authService.resetPassword(token, req.body , user);
 
   sendResponse(res, {
     statusCode: 200,

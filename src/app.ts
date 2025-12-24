@@ -35,13 +35,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // cron
-// cron.schedule("* * * * *", () => {
-//   try {
-//     AppointmentService.cancelUnPaidAppointments();
-//   } catch (error) {
-//     console.log(error);
-//   }
-// });
+cron.schedule("*/30 * * * *", async () => {
+  try {
+    await AppointmentService.cancelUnPaidAppointments();
+    console.log("Cron ran every 30 minutes");
+  } catch (error) {
+    console.error("Cron error:", error);
+  }
+});
+
 
 
 // routes
