@@ -27,7 +27,8 @@ const myAppointments = catchAsync(async (req: Request & { user?: JwtPayload }, r
 });
 
 const getAllAppointments = catchAsync(async (req: Request, res: Response) => {
-  const result = await AppointmentService.getAllAppointments();
+  const { page, limit, status ,paymentStatus} = req.query;
+  const result = await AppointmentService.getAllAppointments( Number(page || 1), Number(limit || 10), status as AppointmentStatus, paymentStatus as PaymentStatus);
   sendResponse(res, {
     statusCode: 200,
     success: true,

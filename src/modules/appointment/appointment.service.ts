@@ -124,8 +124,20 @@ const myAppointments = async (user: JwtPayload, page: number, limit: number, sta
 };
 
 // task get all data from db for admin
-const getAllAppointments = async () => {
-  return await findManyWithFilters(prisma.appointment, {});
+const getAllAppointments = async (page: number, limit: number, status: AppointmentStatus ,PaymentStatus : PaymentStatus) => {
+  return await findManyWithFilters(prisma.appointment, {
+    page,
+    limit,
+    include: {
+      doctor: true,
+      patient: true,
+      schedule: true,
+    },
+    filters: {
+      ...(status ? { status } : {}),
+      ...(PaymentStatus ? { paymentStatus : PaymentStatus} : {}),
+    },
+  });
 };
 
 const updateAppointmentStatus = async (appointmentId: string, status: AppointmentStatus, user: JwtPayload) => {
