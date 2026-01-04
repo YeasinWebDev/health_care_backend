@@ -51,10 +51,11 @@ const updatePatient = async (user: JwtPayload, payload: any) => {
     if (patientHealthData) {
       await tx.patientHealthData.upsert({
         where: { patientId: patientInfo.id },
-        update: patientHealthData,
+        update: { ...patientHealthData, dateOfBirth: new Date(patientHealthData.dateOfBirth) },
         create: {
           ...patientHealthData,
           patientId: patientInfo.id,
+          dateOfBirth: new Date(patientHealthData.dateOfBirth),
         },
       });
     }
@@ -75,4 +76,13 @@ const deletePatient = async (id: string) => {
   return await prisma.patient.delete({ where: { id } });
 };
 
-export const PatientService = { getAllPatients, getSinglePatient, updatePatient, deletePatient };
+const myPatientData = async (user: JwtPayload) => {
+  const patientInfo = await prisma.patient.findUnique({ where: { email: user.email, isDeleted: false } });
+
+  if (!patientInfo) {
+    throw new AppError("Patient not found", 404);
+  }
+  return await prisma.patientHealthData.findUnique({ where: { patientId: patientInfo.id } });
+};
+
+export const PatientService = { getAllPatients, getSinglePatient, updatePatient, deletePatient, myPatientData };

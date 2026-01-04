@@ -38,6 +38,7 @@ const getSinglePatient = catchAsync(async (req: Request, res: Response) => {
 
 const updatePatient = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
   const result = await PatientService.updatePatient(req.user as JwtPayload, req.body);
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -56,4 +57,15 @@ const deletePatient = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const PatientController = { getAllPatients, getSinglePatient, updatePatient, deletePatient };
+const myPatientData = catchAsync(async (req: Request & { user?: JwtPayload }, res: Response) => {
+  const result = await PatientService.myPatientData(req.user as JwtPayload);
+  
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Patient data fetched successfully",
+    data: result,
+  });
+});
+
+export const PatientController = { getAllPatients, getSinglePatient, updatePatient, deletePatient, myPatientData };

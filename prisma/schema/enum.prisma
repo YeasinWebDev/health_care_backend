@@ -41,4 +41,7 @@ enum BloodGroup {
 enum MaritalStatus {
   MARRIED
   UNMARRIED
+  DIVORCED
+  WIDOWED
+  SEPARATED
 }
