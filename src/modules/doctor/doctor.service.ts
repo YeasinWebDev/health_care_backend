@@ -83,14 +83,14 @@ Return the response in JSON format like:
     doctor.doctorSpecialties.some((ds) => ds.specialities.title.toLowerCase().includes(suggestion.recommendedSpecialty?.toLowerCase().trim() || ""))
   );
 
-  return recommendedDoctors
+  return recommendedDoctors;
 };
 const getAllFromDB = async (
   page: number,
   limit: number,
   search: string,
   email: string,
-  specialties: string[], 
+  specialties: string[],
   contactNumber: string,
   gender: string,
   appointmentFee: string,
@@ -132,7 +132,7 @@ const getAllFromDB = async (
       },
       doctorSchedules: {
         include: {
-          schedule:true ,
+          schedule: true,
         },
       },
       review: true,
@@ -206,6 +206,9 @@ const getSingleDoctor = async (id: string) => {
 };
 
 const deleteDoctor = async (id: string) => {
+  await prisma.doctorSpecialties.deleteMany({
+    where: { doctorId: id },
+  });
   return await prisma.doctor.delete({
     where: {
       id,
