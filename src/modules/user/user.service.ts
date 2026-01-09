@@ -1,4 +1,4 @@
-import { Admin, Doctor, Patient, User, UserRole, UserStatus } from "@prisma/client";
+import { Admin, Doctor, Patient, Prisma, User, UserRole, UserStatus } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { uploadToCloudinary } from "../../helper/fileUploder";
 import { createPatientInput } from "./user.interface";
@@ -33,7 +33,7 @@ const createPatient = async (payload: createPatientInput, file: Express.Multer.F
       data: {
         email: payload.email,
         password: hashedPassword,
-        needPasswordChange:false
+        needPasswordChange: false,
       },
     });
     let patient = await tx.patient.create({
@@ -96,14 +96,15 @@ const createAdmin = async (body: any, file: Express.Multer.File | undefined) => 
 
 const createDoctor = async (body: any, file: Express.Multer.File | undefined) => {
   if (!body) {
-    return new AppError("Doctor data is required", 400);
+    throw new AppError("Doctor data is required", 400);
   }
 
   if (file) {
     const uploadImage = await uploadToCloudinary(file);
     body.profilePhoto = uploadImage?.secure_url;
   }
-  const hashedPassword: string = await bcrypt.hash(body.password, 10);
+
+  const hashedPassword = await bcrypt.hash(body.password, 10);
 
   const userData = {
     email: body.email,
@@ -126,26 +127,32 @@ const createDoctor = async (body: any, file: Express.Multer.File | undefined) =>
     designation: body.designation,
   };
 
-  const result = await prisma.$transaction(async (transactionClient) => {
-    await transactionClient.user.create({
-      data: userData,
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.user.create({ data: userData });
+
+      const createdDoctor = await tx.doctor.create({
+        data: doctorData,
+      });
+
+      await tx.doctorSpecialties.createMany({
+        data: body.specialties.map((speciality: string) => ({
+          specialitiesId: speciality,
+          doctorId: createdDoctor.id,
+        })),
+      });
+
+      return createdDoctor;
     });
 
-    const createdDoctorData = await transactionClient.doctor.create({
-      data: doctorData,
-    });
+    return result;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new AppError("Email already exists", 409);
+    }
 
-    await transactionClient.doctorSpecialties.createMany({
-      data: body.specialties.map((speciality: string) => ({
-        specialitiesId: speciality,
-        doctorId: createdDoctorData.id,
-      })),
-    });
-
-    return createdDoctorData;
-  });
-
-  return result;
+    throw error;
+  }
 };
 
 const getallFromDB = async (page: number, limit: number, search: string, sortBy?: keyof User, sortOrder?: "asc" | "desc", role?: UserRole, status?: UserStatus) => {
@@ -285,51 +292,48 @@ const deleteAdmin = async (id: string) => {
   return res;
 };
 
-const updateMyProfie = async (user: JwtPayload,body: Partial<Admin> | Partial<Doctor> | Partial<Patient>, file: Express.Multer.File | undefined) => {
-  if(!body)return null
+const updateMyProfie = async (user: JwtPayload, body: Partial<Admin> | Partial<Doctor> | Partial<Patient>, file: Express.Multer.File | undefined) => {
+  if (!body) return null;
 
-    const userInfo = await prisma.user.findUniqueOrThrow({
-        where: {
-            email: user?.email,
-            status: UserStatus.ACTIVE
-        }
+  const userInfo = await prisma.user.findUniqueOrThrow({
+    where: {
+      email: user?.email,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  if (file) {
+    const upload = await uploadToCloudinary(file);
+    body.profilePhoto = upload?.secure_url;
+  }
+
+  let profileInfo;
+
+  if (userInfo.role === UserRole.ADMIN) {
+    profileInfo = await prisma.admin.update({
+      where: {
+        email: userInfo.email,
+      },
+      data: body as Admin,
     });
+  } else if (userInfo.role === UserRole.DOCTOR) {
+    profileInfo = await prisma.doctor.update({
+      where: {
+        email: userInfo.email,
+      },
+      data: body as Doctor,
+    });
+  } else if (userInfo.role === UserRole.PATIENT) {
+    profileInfo = await prisma.patient.update({
+      where: {
+        email: userInfo.email,
+      },
+      data: body as Patient,
+    });
+  }
 
-    
-    if (file) {
-        const upload = await uploadToCloudinary(file);
-        body.profilePhoto = upload?.secure_url;
-    }
-
-    let profileInfo;
-
-    if (userInfo.role === UserRole.ADMIN) {
-        profileInfo = await prisma.admin.update({
-            where: {
-                email: userInfo.email
-            },
-            data: body as Admin
-        })
-    }
-    else if (userInfo.role === UserRole.DOCTOR) {
-        profileInfo = await prisma.doctor.update({
-            where: {
-                email: userInfo.email
-            },
-            data: body as Doctor
-        })
-    }
-    else if (userInfo.role === UserRole.PATIENT) {
-        profileInfo = await prisma.patient.update({
-            where: {
-                email: userInfo.email
-            },
-            data: body as Patient
-        })
-    }
-
-    return { ...profileInfo };
-}
+  return { ...profileInfo };
+};
 
 export const UserService = {
   createPatient,
@@ -341,5 +345,5 @@ export const UserService = {
   getUserById,
   updateAdmin,
   deleteAdmin,
-  updateMyProfie
+  updateMyProfie,
 };
