@@ -80,7 +80,7 @@ Return the response in JSON format like:
 
   // 6. Filter doctors
   const recommendedDoctors = doctors.filter((doctor) =>
-    doctor.doctorSpecialties.some((ds) => ds.specialities.title.toLowerCase().includes(suggestion.recommendedSpecialty?.toLowerCase().trim() || ""))
+    doctor.doctorSpecialties.some((ds) => ds.specialities.title.toLowerCase().includes(suggestion.recommendedSpecialty?.toLowerCase().trim() || "")),
   );
 
   return recommendedDoctors;
@@ -95,7 +95,7 @@ const getAllFromDB = async (
   gender: string,
   appointmentFee: string,
   sortBy?: keyof Doctor,
-  sortOrder?: "asc" | "desc"
+  sortOrder?: "asc" | "desc",
 ) => {
   return await findManyWithFilters(prisma.doctor, {
     page,

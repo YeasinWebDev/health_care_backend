@@ -1,4 +1,4 @@
-import { UserStatus } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 import { prisma } from "../../config/db";
 import bcrypt from "bcryptjs";
 import { generateToken, verifyToken } from "../../helper/jwtToken";
@@ -14,6 +14,32 @@ const login = async (payload: any) => {
     },
   });
 
+  let userName;
+
+  if (result?.role === UserRole.ADMIN) {
+    const getUser = await prisma.admin.findUnique({
+      where: {
+        email: result?.email as string,
+      },
+    });
+
+    userName = getUser?.name;
+  } else if (result?.role === UserRole.DOCTOR) {
+    const getUser = await prisma.doctor.findUnique({
+      where: {
+        email: result?.email as string,
+      },
+    });
+    userName = getUser?.name;
+  } else if (result?.role === UserRole.PATIENT) {
+    const getUser = await prisma.patient.findUnique({
+      where: {
+        email: result?.email as string,
+      },
+    });
+    userName = getUser?.name;
+  }
+
   if (!result) {
     throw new AppError("User not found!", 400);
   }
@@ -28,7 +54,7 @@ const login = async (payload: any) => {
 
   const { password, ...rest } = result;
 
-  return { token, user: rest };
+  return { token, user: { ...rest, name: userName } };
 };
 
 const refreshToken = async (token: string) => {
@@ -95,10 +121,10 @@ const forgotPassword = async (payload: { email: string }) => {
       status: UserStatus.ACTIVE,
     },
   });
-  console.log(userData,"userData")
+  console.log(userData, "userData");
 
   const resetPassToken = generateToken({ email: userData.email, role: userData.role, expiry: "10m" });
-  console.log(resetPassToken, 'token')
+  console.log(resetPassToken, "token");
 
   const resetPassLink = process.env.reset_pass_link + `?userId=${userData.id}&email=${encodeURIComponent(userData.email)}&token=${resetPassToken.accessToken}`;
 
@@ -178,7 +204,7 @@ const forgotPassword = async (payload: { email: string }) => {
             </table>
         </body>
         </html>
-        `
+        `,
   );
 };
 
