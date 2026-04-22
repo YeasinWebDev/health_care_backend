@@ -1,4 +1,4 @@
-import { Admin, Doctor, Patient, Prisma, User, UserRole, UserStatus } from "@prisma/client";
+import { Admin, Doctor, Gender, Patient, Prisma, User, UserRole, UserStatus } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { uploadToCloudinary } from "../../helper/fileUploder";
 import { createPatientInput } from "./user.interface";
@@ -292,9 +292,11 @@ const deleteAdmin = async (id: string) => {
   return res;
 };
 
-const updateMyProfie = async (user: JwtPayload, body: Partial<Admin> | Partial<Doctor> | Partial<Patient>, file: Express.Multer.File | undefined) => {
-  if (!body) return null;
-
+const updateMyProfie = async (
+  user: JwtPayload,
+  body: any,
+  file: Express.Multer.File | undefined
+) => {
   const userInfo = await prisma.user.findUniqueOrThrow({
     where: {
       email: user?.email,
@@ -311,28 +313,48 @@ const updateMyProfie = async (user: JwtPayload, body: Partial<Admin> | Partial<D
 
   if (userInfo.role === UserRole.ADMIN) {
     profileInfo = await prisma.admin.update({
-      where: {
-        email: userInfo.email,
+      where: { email: userInfo.email },
+      data: {
+        name: body.name,
+        contactNumber: body.contactNumber,
+        address: body.address,
+        profilePhoto: body.profilePhoto,
       },
-      data: body as Admin,
-    });
-  } else if (userInfo.role === UserRole.DOCTOR) {
-    profileInfo = await prisma.doctor.update({
-      where: {
-        email: userInfo.email,
-      },
-      data: body as Doctor,
-    });
-  } else if (userInfo.role === UserRole.PATIENT) {
-    profileInfo = await prisma.patient.update({
-      where: {
-        email: userInfo.email,
-      },
-      data: body as Patient,
     });
   }
 
-  return { ...profileInfo };
+  if (userInfo.role === UserRole.DOCTOR) {
+    profileInfo = await prisma.doctor.update({
+      where: { email: userInfo.email },
+      data: {
+        name: body.name,
+        contactNumber: body.contactNumber,
+        address: body.address,
+        profilePhoto: body.profilePhoto,
+        gender: body.gender,
+        experience: body.experience,
+        appointmentFee: body.appointmentFee,
+        designation: body.designation,
+        qualification: body.qualification,
+        currentWorkPlace: body.currentWorkPlace,
+      },
+    });
+  }
+
+  if (userInfo.role === UserRole.PATIENT) {
+    profileInfo = await prisma.patient.update({
+      where: { email: userInfo.email },
+      data: {
+        name: body.name,
+        contactNumber: body.contactNumber,
+        address: body.address,
+        profilePhoto: body.profilePhoto,
+        gender: body.gender,
+      },
+    });
+  }
+
+  return profileInfo;
 };
 
 export const UserService = {
