@@ -20,6 +20,8 @@ import { patientRoutes } from "./modules/patient/patient.routes";
 
 const app: Application = express();
 
+app.set("trust proxy", 1);
+
 app.post("/api/v1/payment/webhook", express.raw({ type: "application/json" }), PaymentController.checkWebhook);
 
 app.use(
